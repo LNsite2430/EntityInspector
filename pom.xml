@@ -4,7 +4,7 @@
 
     <groupId>com.example</groupId>
     <artifactId>EntityInspector</artifactId>
-    <version>1.0-SNAPSHOT</version>
+    <version>1.0</version>
     <packaging>jar</packaging>
 
     <name>EntityInspector</name>
@@ -71,4 +71,5 @@
     </plugins>
 </build>
 </project>
+
 
