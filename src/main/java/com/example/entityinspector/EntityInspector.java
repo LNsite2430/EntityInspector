@@ -20,7 +20,7 @@ public class EntityInspector extends JavaPlugin {
         databaseManager.initialize();
 
         // Register commands and events
-        getCommand("ec").setExecutor(new InspectorCommand(this));
+        getCommand("entityinspector").setExecutor(new InspectorCommand(this));
         getServer().getPluginManager().registerEvents(new EntityDataListener(this), this);
         getLogger().info("EntityInspector has been enabled!");
     }

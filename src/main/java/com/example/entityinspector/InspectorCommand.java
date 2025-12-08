@@ -121,10 +121,10 @@ public class InspectorCommand implements CommandExecutor {
                     player.sendMessage(ChatColor.GRAY + "No loaded chunks with item drops found.");
                 }
             } else {
-                player.sendMessage(ChatColor.RED + "Usage: /ec <inspect|i|search|s>");
+                player.sendMessage(ChatColor.RED + "Usage: /entityinspector <inspect|i|search|s>");
             }
         } else {
-            player.sendMessage(ChatColor.RED + "Usage: /ec <inspect|i|search|s>");
+            player.sendMessage(ChatColor.RED + "Usage: /entityinspector <inspect|i|search|s>");
         }
 
         return true;
