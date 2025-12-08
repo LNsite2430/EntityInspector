@@ -36,44 +36,89 @@ public class InspectorCommand implements CommandExecutor {
             } else if (subCommand.equals("search") || subCommand.equals("s")) {
                 player.sendMessage(ChatColor.YELLOW + "Searching for high density chunks...");
 
-                java.util.List<org.bukkit.Chunk> chunks = new java.util.ArrayList<>();
-                for (org.bukkit.Chunk chunk : player.getWorld().getLoadedChunks()) {
-                    chunks.add(chunk);
+                // Helper record to store chunk data
+                class ChunkData {
+                    org.bukkit.Chunk chunk;
+                    int nonItemEntityCount;
+                    int itemCount;
+                    double totalY;
+
+                    ChunkData(org.bukkit.Chunk chunk, int nonItemEntityCount, int itemCount, double totalY) {
+                        this.chunk = chunk;
+                        this.nonItemEntityCount = nonItemEntityCount;
+                        this.itemCount = itemCount;
+                        this.totalY = totalY;
+                    }
                 }
 
-                chunks.sort((c1, c2) -> Integer.compare(
-                        c2.getEntities().length,
-                        c1.getEntities().length));
+                java.util.List<ChunkData> chunkDataList = new java.util.ArrayList<>();
 
-                int count = 0;
-                player.sendMessage(ChatColor.GOLD + "=== Top Entity Density Chunks ===");
-                for (org.bukkit.Chunk chunk : chunks) {
-                    if (count >= 10)
-                        break;
-                    int entityCount = chunk.getEntities().length;
-                    if (entityCount > 0) {
-                        int blockX = chunk.getX() * 16;
-                        int blockZ = chunk.getZ() * 16;
+                for (org.bukkit.Chunk chunk : player.getWorld().getLoadedChunks()) {
+                    int nonItemCount = 0;
+                    int items = 0;
+                    double tY = 0;
 
-                        double totalY = 0;
-                        int itemCount = 0;
+                    if (chunk.getEntities().length > 0) {
                         for (org.bukkit.entity.Entity e : chunk.getEntities()) {
-                            totalY += e.getLocation().getY();
+                            tY += e.getLocation().getY();
                             if (e instanceof org.bukkit.entity.Item) {
-                                itemCount++;
+                                items++;
+                            } else {
+                                nonItemCount++;
                             }
                         }
-                        int avgY = (int) (totalY / entityCount);
+                        chunkDataList.add(new ChunkData(chunk, nonItemCount, items, tY));
+                    }
+                }
 
-                        player.sendMessage(ChatColor.AQUA + "Chunk[" + chunk.getX() + ", " + chunk.getZ() + "]"
+                // 1. Sort and display by Non-Item Entities
+                chunkDataList.sort((c1, c2) -> Integer.compare(c2.nonItemEntityCount, c1.nonItemEntityCount));
+
+                player.sendMessage(ChatColor.GOLD + "=== Top Entity Density Chunks (Non-Items) ===");
+                int count = 0;
+                for (ChunkData data : chunkDataList) {
+                    if (count >= 10)
+                        break;
+                    if (data.nonItemEntityCount > 0) {
+                        org.bukkit.Chunk c = data.chunk;
+                        int blockX = c.getX() * 16;
+                        int blockZ = c.getZ() * 16;
+                        int avgY = (int) (data.totalY / (data.nonItemEntityCount + data.itemCount)); // Avg Y of all
+                                                                                                     // entities for
+                                                                                                     // rough location
+
+                        player.sendMessage(ChatColor.AQUA + "Chunk[" + c.getX() + ", " + c.getZ() + "]"
                                 + ChatColor.GRAY + " (x: " + blockX + ", y: " + avgY + ", z: " + blockZ + "): "
-                                + ChatColor.WHITE + entityCount + " entities "
-                                + ChatColor.YELLOW + "(Items: " + itemCount + ")");
+                                + ChatColor.WHITE + data.nonItemEntityCount + " entities");
                         count++;
                     }
                 }
                 if (count == 0) {
-                    player.sendMessage(ChatColor.GRAY + "No loaded chunks with entities found.");
+                    player.sendMessage(ChatColor.GRAY + "No loaded chunks with non-item entities found.");
+                }
+
+                // 2. Sort and display by Item Drops
+                chunkDataList.sort((c1, c2) -> Integer.compare(c2.itemCount, c1.itemCount));
+
+                player.sendMessage(ChatColor.GOLD + "=== Top Item Drop Density Chunks ===");
+                count = 0;
+                for (ChunkData data : chunkDataList) {
+                    if (count >= 10)
+                        break;
+                    if (data.itemCount > 0) {
+                        org.bukkit.Chunk c = data.chunk;
+                        int blockX = c.getX() * 16;
+                        int blockZ = c.getZ() * 16;
+                        int avgY = (int) (data.totalY / (data.nonItemEntityCount + data.itemCount));
+
+                        player.sendMessage(ChatColor.AQUA + "Chunk[" + c.getX() + ", " + c.getZ() + "]"
+                                + ChatColor.GRAY + " (x: " + blockX + ", y: " + avgY + ", z: " + blockZ + "): "
+                                + ChatColor.YELLOW + data.itemCount + " items");
+                        count++;
+                    }
+                }
+                if (count == 0) {
+                    player.sendMessage(ChatColor.GRAY + "No loaded chunks with item drops found.");
                 }
             } else {
                 player.sendMessage(ChatColor.RED + "Usage: /ec <inspect|i|search|s>");
